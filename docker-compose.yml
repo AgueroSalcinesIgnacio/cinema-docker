@@ -1,0 +1,61 @@
+services:
+    postgres:
+        image: postgres
+        container_name: postgres_db
+        restart: always
+        environment:
+          POSTGRES_DB: ${POSTGRES_DB}
+          POSTGRES_USER: ${POSTGRES_USER}
+          POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+          POSTGRES_ROOT_PASSWORD: ${POSTGRES_ROOT_PASSWORD}
+        ports:
+          - ${POSTGRES_PORT}:5432
+        volumes:
+          - postgres-db-volume:/var/lib/postgresql/data
+          - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+        networks:
+            - postgres-db-network
+    pgadmin:
+        image: dpage/pgadmin4
+        environment:
+            PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+            PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+        ports:
+            - ${PGADMIN_PORT}:80
+        volumes:
+            - ./scripts/servers.json:/pgadmin4/servers.json
+        networks:
+            - postgres-db-network       
+            
+    movies-server:
+        build:
+            context: https://github.com/AgueroSalcinesIgnacio/cinema-backend-movies.git#feature/docker
+            dockerfile: Dockerfile
+        image: movies-server:latest
+        environment:
+            DB_URL: ${POSTGRES_URL}
+            PG_USER: ${POSTGRES_USER}
+            PG_PASSWORD: ${POSTGRES_PASSWORD}
+        ports:
+            - ${BACKEND_MOVIES_PORT}:8080
+        
+        depends_on:
+            - "postgres"
+        networks:
+            - postgres-db-network
+volumes:
+    postgres-db-volume:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: ./postgres/data
+    cinema-movies-volume:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: ./cinema/movies/data
+networks:
+    postgres-db-network:
+        driver: bridge
