@@ -12,9 +12,15 @@ services:
           - ${POSTGRES_PORT}:5432
         volumes:
           - postgres-db-volume:/var/lib/postgresql/data
-          - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+          - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+        healthcheck:
+          test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+          interval: 10s
+          retries: 5
+          start_period: 30s
+          timeout: 10s
         networks:
-            - postgres-db-network
+            - db-network
     pgadmin:
         image: dpage/pgadmin4
         environment:
@@ -25,13 +31,13 @@ services:
         volumes:
             - ./scripts/servers.json:/pgadmin4/servers.json
         networks:
-            - postgres-db-network       
+            - db-network       
             
-    movies-server:
+    movies-backend:
         build:
             context: https://github.com/AgueroSalcinesIgnacio/cinema-backend-movies.git#feature/docker
             dockerfile: Dockerfile
-        image: movies-server:latest
+        image: movies-backend
         environment:
             DB_URL: ${POSTGRES_URL}
             PG_USER: ${POSTGRES_USER}
@@ -40,9 +46,31 @@ services:
             - ${BACKEND_MOVIES_PORT}:8080
         
         depends_on:
-            - "postgres"
+            postgres:
+                condition: service_healthy
+                restart: true
         networks:
-            - postgres-db-network
+            - db-network
+            - backend-network
+            
+    cinema-bff:
+        build:
+           context: https://github.com/AgueroSalcinesIgnacio/cinema-bff.git#develop
+           target: build
+        image: cinema-bff
+        environment:
+            BACKEND_URL: ${BACKEND_URL}
+        volumes:
+           - ../backend_for_frontend/cinema-bff/:/app
+           - /app/node_modules
+        ports:
+           - ${BFF_PORT}:3000
+        command: npm run dev
+        depends_on:
+            - movies-backend
+        networks:
+            - backend-network
+            
 volumes:
     postgres-db-volume:
         driver: local
@@ -50,12 +78,8 @@ volumes:
             type: none
             o: bind
             device: ./postgres/data
-    cinema-movies-volume:
-        driver: local
-        driver_opts:
-            type: none
-            o: bind
-            device: ./cinema/movies/data
 networks:
-    postgres-db-network:
+    db-network:
+        driver: bridge
+    backend-network:
         driver: bridge
