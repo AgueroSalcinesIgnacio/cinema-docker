@@ -55,23 +55,41 @@ services:
             
     cinema-bff:
         build:
-           context: https://github.com/AgueroSalcinesIgnacio/cinema-bff.git#develop
-           target: build
+           #context: https://github.com/AgueroSalcinesIgnacio/cinema-bff.git#develop
+           context: ../backend_for_frontend/repositories/cinema-bff
+           dockerfile: Dockerfile
         image: cinema-bff
         environment:
+            PORT: ${BFF_PORT}
             BACKEND_URL: ${BACKEND_URL}
+            ALLOW_ORIGINS: ${BFF_ALLOW_ORIGINS}
         volumes:
-           - ../backend_for_frontend/cinema-bff/:/app
-           - /app/node_modules
+           - node_modules:/app/node_modules
         ports:
            - ${BFF_PORT}:3000
-        command: npm run dev
         depends_on:
             - movies-backend
         networks:
             - backend-network
+            - frontend-network
+    cinema-frontend:
+        build:
+           context: ../frontend/cinema-frontend
+           dockerfile: Dockerfile
+        image: cinema-frontend
+        environment:
+            VITE_BASE_URL: ${FRONTEND_BASE_URL}
+        volumes:
+           - node_modules:/app/node_modules
+        ports:
+           - ${FRONTEND_PORT}:9000
+        depends_on:
+            - cinema-bff
+        networks:
+            - frontend-network
             
 volumes:
+    node_modules:
     postgres-db-volume:
         driver: local
         driver_opts:
@@ -80,6 +98,5 @@ volumes:
             device: ./postgres/data
 networks:
     db-network:
-        driver: bridge
     backend-network:
-        driver: bridge
+    frontend-network:
