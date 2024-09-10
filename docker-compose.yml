@@ -55,8 +55,7 @@ services:
             
     cinema-bff:
         build:
-           #context: https://github.com/AgueroSalcinesIgnacio/cinema-bff.git#develop
-           context: ../backend_for_frontend/repositories/cinema-bff
+           context: https://github.com/AgueroSalcinesIgnacio/cinema-bff.git#develop
            dockerfile: Dockerfile
         image: cinema-bff
         environment:
@@ -74,11 +73,11 @@ services:
             - frontend-network
     cinema-frontend:
         build:
-           context: ../frontend/cinema-frontend
+           context: https://github.com/AgueroSalcinesIgnacio/cinema-frontend.git#develop
            dockerfile: Dockerfile
         image: cinema-frontend
         environment:
-            VITE_BASE_URL: ${FRONTEND_BASE_URL}
+            VITE_BASE_URL: ${BFF_BASE_URL}
         volumes:
            - node_modules:/app/node_modules
         ports:
