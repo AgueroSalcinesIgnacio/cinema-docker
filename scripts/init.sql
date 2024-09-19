@@ -41,6 +41,14 @@ create table reviews (
   review_date date
 );
 
+create table users (
+  id bigint primary key generated always as identity,
+  username text not null unique,
+  password_hash text not null,
+  email text unique,
+  created_at timestamp with time zone default now()
+);
+
 
 INSERT INTO genres (name) VALUES
 ('Action'),

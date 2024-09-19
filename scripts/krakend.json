@@ -1,0 +1,22 @@
+{
+  "version": 3,
+  "endpoints": [
+    {
+      "endpoint": "/movies",
+      "method": "GET",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/movies",
+          "encoding": "json",
+          "method": "GET",
+          "host": ["http://movies-backend:8080"],
+		  "is_collection": true,
+		  "mapping": {
+			  "collection": "movies"
+		  }
+        }
+      ]
+    }
+  ]
+}
