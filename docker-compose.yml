@@ -90,7 +90,7 @@ services:
         
     cinema-bff:
         build:
-           context: https://github.com/AgueroSalcinesIgnacio/cinema-bff.git#feature/security
+           context: https://github.com/AgueroSalcinesIgnacio/cinema-bff.git#develop
            dockerfile: Dockerfile
         image: cinema-bff
         environment:

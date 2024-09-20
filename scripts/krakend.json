@@ -3,31 +3,26 @@
     "endpoints": [{
             "endpoint": "/movies",
             "method": "GET",
-            "output_encoding": "json",
+            "output_encoding": "json-collection",
             "backend": [{
                     "url_pattern": "/movies",
                     "encoding": "json",
                     "method": "GET",
                     "host": ["http://movies-backend:8080"],
-                    "is_collection": true,
-                    "mapping": {
-                        "collection": "movies"
-                    }
+                    "is_collection": true
+                    
                 }
             ]
         }, {
             "endpoint": "/users",
             "method": "GET",
-            "output_encoding": "json",
+            "output_encoding": "json-collection",
             "backend": [{
                     "url_pattern": "/users",
                     "encoding": "json",
                     "method": "GET",
                     "host": ["http://users-backend:8080"],
-                    "is_collection": true,
-                    "mapping": {
-                        "collection": "users"
-                    }
+                    "is_collection": true
                 }
             ]
         }, {
