@@ -1,5 +1,5 @@
 services:
-    postgres:
+    bbdd:
         image: postgres
         container_name: postgres_db
         restart: always
@@ -31,7 +31,9 @@ services:
         volumes:
             - ./scripts/servers.json:/pgadmin4/servers.json
         networks:
-            - db-network       
+            - db-network
+        depends_on:
+            - bbdd
             
     movies-backend:
         build:
@@ -46,7 +48,7 @@ services:
             - ${BACKEND_MOVIES_PORT}:8080
         
         depends_on:
-            postgres:
+            bbdd:
                 condition: service_healthy
                 restart: true
         networks:
@@ -66,17 +68,17 @@ services:
             - ${BACKEND_USERS_PORT}:8080
         
         depends_on:
-            postgres:
+            bbdd:
                 condition: service_healthy
                 restart: true
         networks:
             - db-network
             - backend-network
      
-    krakend:
+    api:
         image: devopsfaith/krakend
         ports:
-          - "8000:8080"
+          - "${API_GATEWAY_PORT}:8080"
         volumes:
           - ./scripts/krakend.json:/etc/krakend/krakend.json
         networks:
@@ -93,14 +95,16 @@ services:
         image: cinema-bff
         environment:
             PORT: ${BFF_PORT}
-            BACKEND_URL: ${BACKEND_API_URL}
+            BACKEND_URL: ${API_GATEWAY_URL}
             ALLOW_ORIGINS: ${BFF_ALLOW_ORIGINS}
+            BCRYPT_SALT: ${BFF_BCRYPT_SALT}
+            JWT_SECRET: ${BFF_JWT_SECRET}
         volumes:
            - node_modules:/app/node_modules
         ports:
            - ${BFF_PORT}:3000
         depends_on:
-            - krakend
+            - api
         networks:
             - api-network
             - frontend-network
