@@ -1,5 +1,5 @@
 services:
-    postgres:
+    bbdd:
         image: postgres
         container_name: postgres_db
         restart: always
@@ -31,11 +31,13 @@ services:
         volumes:
             - ./scripts/servers.json:/pgadmin4/servers.json
         networks:
-            - db-network       
+            - db-network
+        depends_on:
+            - bbdd
             
     movies-backend:
         build:
-            context: https://github.com/AgueroSalcinesIgnacio/cinema-backend-movies.git#feature/docker
+            context: https://github.com/AgueroSalcinesIgnacio/cinema-backend-movies.git#develop
             dockerfile: Dockerfile
         image: movies-backend
         environment:
@@ -46,30 +48,65 @@ services:
             - ${BACKEND_MOVIES_PORT}:8080
         
         depends_on:
-            postgres:
+            bbdd:
                 condition: service_healthy
                 restart: true
         networks:
             - db-network
             - backend-network
-            
+    
+    users-backend:
+        build:
+            context: https://github.com/AgueroSalcinesIgnacio/cinema-backend-users.git#develop
+            dockerfile: Dockerfile
+        image: users-backend
+        environment:
+            DB_URL: ${POSTGRES_URL}
+            PG_USER: ${POSTGRES_USER}
+            PG_PASSWORD: ${POSTGRES_PASSWORD}
+        ports:
+            - ${BACKEND_USERS_PORT}:8080
+        
+        depends_on:
+            bbdd:
+                condition: service_healthy
+                restart: true
+        networks:
+            - db-network
+            - backend-network
+     
+    api:
+        image: devopsfaith/krakend
+        ports:
+          - "${API_GATEWAY_PORT}:8080"
+        volumes:
+          - ./scripts/krakend.json:/etc/krakend/krakend.json
+        networks:
+            - backend-network
+            - api-network
+        depends_on:
+            - users-backend
+            - movies-backend
+        
     cinema-bff:
         build:
-           context: https://github.com/AgueroSalcinesIgnacio/cinema-bff.git#develop
+           context: https://github.com/AgueroSalcinesIgnacio/cinema-bff.git#feature/security
            dockerfile: Dockerfile
         image: cinema-bff
         environment:
             PORT: ${BFF_PORT}
-            BACKEND_URL: ${BACKEND_URL}
+            BACKEND_URL: ${API_GATEWAY_URL}
             ALLOW_ORIGINS: ${BFF_ALLOW_ORIGINS}
+            BCRYPT_SALT: ${BFF_BCRYPT_SALT}
+            JWT_SECRET: ${BFF_JWT_SECRET}
         volumes:
            - node_modules:/app/node_modules
         ports:
            - ${BFF_PORT}:3000
         depends_on:
-            - movies-backend
+            - api
         networks:
-            - backend-network
+            - api-network
             - frontend-network
     cinema-frontend:
         build:
@@ -98,4 +135,5 @@ volumes:
 networks:
     db-network:
     backend-network:
+    api-network:
     frontend-network:
