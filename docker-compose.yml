@@ -98,9 +98,9 @@ services:
             BACKEND_URL: ${API_GATEWAY_URL}
             ALLOW_ORIGINS: ${BFF_ALLOW_ORIGINS}
             BCRYPT_SALT: ${BFF_BCRYPT_SALT}
-            JWT_SECRET: ${BFF_JWT_SECRET}
+            JWT_SECRET: ${BFF_JWT_SECRET}   
         volumes:
-           - node_modules:/app/node_modules
+           - node-modules:/app/node_modules
         ports:
            - ${BFF_PORT}:3000
         depends_on:
@@ -110,13 +110,11 @@ services:
             - frontend-network
     cinema-frontend:
         build:
-           context: https://github.com/AgueroSalcinesIgnacio/cinema-frontend.git#develop
-           dockerfile: Dockerfile
+           #context: https://github.com/AgueroSalcinesIgnacio/cinema-frontend.git#develop
+           context: ../frontend/cinema-frontend/
+           args:
+            - VITE_BACKEND_URL=http://localhost:${BFF_PORT}
         image: cinema-frontend
-        environment:
-            VITE_BASE_URL: ${BFF_BASE_URL}
-        volumes:
-           - node_modules:/app/node_modules
         ports:
            - ${FRONTEND_PORT}:9000
         depends_on:
@@ -125,7 +123,7 @@ services:
             - frontend-network
             
 volumes:
-    node_modules:
+    node-modules:
     postgres-db-volume:
         driver: local
         driver_opts:
