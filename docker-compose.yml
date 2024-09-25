@@ -110,8 +110,7 @@ services:
             - frontend-network
     cinema-frontend:
         build:
-           #context: https://github.com/AgueroSalcinesIgnacio/cinema-frontend.git#develop
-           context: ../frontend/cinema-frontend/
+           context: https://github.com/AgueroSalcinesIgnacio/cinema-frontend.git#develop
            args:
             - VITE_BACKEND_URL=http://localhost:${BFF_PORT}
         image: cinema-frontend
